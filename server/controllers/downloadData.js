@@ -1,6 +1,9 @@
 const database = require('../db/database');
 const xl = require('excel4node');
 const wb = new xl.Workbook();
+const path = require('path');
+const os = require('os');
+
 const columnTitleStyle = wb.createStyle({
 	alignment: {
 		horizontal: 'center',
@@ -106,6 +109,7 @@ const downloadData = {
 				.request()
 				.input(`project_id`, project_id)
 				.execute(`dbo.get_all_info_from_project`);
+
 			const jsonData = response.recordset;
 			const wb = new xl.Workbook();
 			const ws = wb.addWorksheet('projects');
@@ -125,7 +129,6 @@ const downloadData = {
 						.style(rowStyle);
 				});
 			});
-
 			wb.write('projects.xlsx');
 			res.status(200).json({ status: 200, data: 'Projects file created!' });
 		} catch (error) {
@@ -135,6 +138,8 @@ const downloadData = {
 		}
 	},
 	downloadSelectedInfo: async function (req, res) {
+		const userHome = os.homedir();
+		const downloadPath = path.join(userHome, 'Downloads');
 		const pool = await database();
 		try {
 			const { selectedQuery } = req.params;
@@ -147,7 +152,6 @@ const downloadData = {
 			const ws = wb.addWorksheet(`${selectedQuery}`);
 			if (jsonData.length > 0) {
 				const keys = Object.keys(jsonData[0]);
-
 				keys.forEach((key, index) => {
 					ws.cell(1, index + 1)
 						.string(key)
@@ -157,13 +161,17 @@ const downloadData = {
 				jsonData.forEach((employee, rowIndex) => {
 					const employeeValues = Object.values(employee);
 					employeeValues.forEach((emp, index) => {
+						const rowValue =
+							employeeValues[index] === null
+								? 'null'
+								: employeeValues[index].toString();
+
 						ws.cell(rowIndex + 2, index + 1)
-							.string(employeeValues[index].toString())
+							.string(rowValue)
 							.style(rowStyle);
 					});
 				});
-
-				wb.write(`${selectedQuery}.xlsx`);
+				wb.write(`${downloadPath}/${selectedQuery}.xlsx`);
 			}
 			res.status(200).json({ status: 200, data: 'Projects file created!' });
 		} catch (error) {
