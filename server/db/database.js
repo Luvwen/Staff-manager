@@ -49,6 +49,7 @@ const connectDb = async function () {
 					`INSERT INTO projects(name_project, area_project, leader, start_date_project, end_date_project, hours_estimation, id_user_admin)VALUES('Bench', 'Arbusta', 1, '2023-08-16', '2030-10-16', 1000, 1)`
 				);
 		}
+		console.log('Database on');
 		return pool;
 	} catch (error) {
 		console.log(error);
